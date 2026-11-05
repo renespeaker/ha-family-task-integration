@@ -11,7 +11,7 @@ points live from checked-off tasks — simple, but points disappear when a list 
 cleared, and chores that reopen every round can't earn any. With Family Tasks,
 **every point is booked and kept**, and each person gets a points sensor.
 
-> **Status: v0.3.1 — points ledger, reward approval by push, statistics.** Use it
+> **Status: v0.3.2 — points ledger, reward approval by push, statistics.** Use it
 > with the Family Task Card v0.14.0 or newer (`points_backend: true`).
 
 ## What you get
@@ -79,7 +79,7 @@ day it is booked — the card books a task when it sees it checked off.
 ### Via HACS (custom repository)
 
 1. HACS → ⋮ → **Custom repositories** → add
-   `https://github.com/renespeaker/ha-family-tasks`, type **Integration**.
+   `https://github.com/renespeaker/ha-family-task-integration`, type **Integration**.
 2. Search **Family Tasks** → **Download** → restart Home Assistant.
 3. **Settings → Devices & services → Add integration → Family Tasks** → Submit.
    There is nothing to fill in.
