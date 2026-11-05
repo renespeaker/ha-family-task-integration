@@ -12,7 +12,7 @@ wenn eine Liste geleert wird, und Ämtli, die jede Runde wieder öffnen, können
 keine bekommen. Mit Family Tasks wird **jeder Punkt gebucht und bleibt**, und jede
 Person bekommt einen Punkte-Sensor.
 
-> **Stand: v0.3.1 – Punktekonto, Belohnungs-Freigabe per Push, Statistik.**
+> **Stand: v0.3.2 – Punktekonto, Belohnungs-Freigabe per Push, Statistik.**
 > Zusammen mit der Family Task Card ab v0.14.0 nutzen (`points_backend: true`).
 
 ## Was du bekommst
@@ -82,7 +82,7 @@ abgehakt sieht.
 ### Über HACS (benutzerdefiniertes Repository)
 
 1. HACS → ⋮ → **Benutzerdefinierte Repositories** →
-   `https://github.com/renespeaker/ha-family-tasks` hinzufügen, Typ **Integration**.
+   `https://github.com/renespeaker/ha-family-task-integration` hinzufügen, Typ **Integration**.
 2. Nach **Family Tasks** suchen → **Herunterladen** → Home Assistant neu starten.
 3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Family Tasks** →
    Absenden. Es gibt nichts auszufüllen.
