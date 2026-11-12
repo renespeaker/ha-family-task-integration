@@ -11,7 +11,7 @@ points live from checked-off tasks — simple, but points disappear when a list 
 cleared, and chores that reopen every round can't earn any. With Family Tasks,
 **every point is booked and kept**, and each person gets a points sensor.
 
-> **Status: v0.3.2 — points ledger, reward approval by push, statistics.** Use it
+> **Status: v0.3.3 — points ledger, reward approval by push, statistics.** Use it
 > with the Family Task Card v0.14.0 or newer (`points_backend: true`).
 
 ## What you get
@@ -76,19 +76,20 @@ day it is booked — the card books a task when it sees it checked off.
 
 ## Installation
 
-### Via HACS (recommended)
+### Via the Marketplace or HACS (recommended)
 
-[![Open Family Tasks in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
+[![Open Family Tasks in the Marketplace or HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
 [![Add the Family Tasks integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
 
-1. In **HACS**, search for **"Family Tasks"** and download it (or use the first
-   button above), then restart Home Assistant.
+1. Home Assistant 2026.11 or newer: **Settings → Marketplace**, search for
+   **"Family Tasks"** and install it. Older versions: download it in **HACS** and
+   restart Home Assistant. The first button above opens the right one.
 2. Add the integration with the second button, or via **Settings → Devices &
    services → Add integration → Family Tasks** → Submit. There is nothing to
    fill in.
 
-> **Not listed in your HACS yet?** Add it as a custom repository instead: HACS →
-> ⋮ → **Custom repositories** → `https://github.com/renespeaker/ha-family-task-integration`,
+> **Not listed yet?** Add it as a custom repository (*Custom repositories* in the
+> Marketplace or in HACS): `https://github.com/renespeaker/ha-family-task-integration`,
 > type **Integration**.
 
 People appear with their first booking. Use the `person.*` entity as `person`

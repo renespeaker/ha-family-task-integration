@@ -12,7 +12,7 @@ wenn eine Liste geleert wird, und Ämtli, die jede Runde wieder öffnen, können
 keine bekommen. Mit Family Tasks wird **jeder Punkt gebucht und bleibt**, und jede
 Person bekommt einen Punkte-Sensor.
 
-> **Stand: v0.3.2 – Punktekonto, Belohnungs-Freigabe per Push, Statistik.**
+> **Stand: v0.3.3 – Punktekonto, Belohnungs-Freigabe per Push, Statistik.**
 > Zusammen mit der Family Task Card ab v0.14.0 nutzen (`points_backend: true`).
 
 ## Was du bekommst
@@ -79,21 +79,21 @@ abgehakt sieht.
 
 ## Installation
 
-### Über HACS (empfohlen)
+### Über den Marketplace oder HACS (empfohlen)
 
-[![Family Tasks in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
+[![Family Tasks im Marketplace oder in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
 [![Integration Family Tasks hinzufügen](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
 
-1. In **HACS** nach **„Family Tasks"** suchen und herunterladen (oder den ersten
-   Button oben nutzen), dann Home Assistant neu starten.
+1. Ab Home Assistant 2026.11: **Einstellungen → Marketplace**, nach **„Family
+   Tasks"** suchen und installieren. Ältere Versionen: in **HACS** herunterladen und
+   Home Assistant neu starten. Der erste Button oben öffnet das Richtige.
 2. Die Integration mit dem zweiten Button hinzufügen oder über **Einstellungen →
    Geräte & Dienste → Integration hinzufügen → Family Tasks** → Absenden. Es gibt
    nichts auszufüllen.
 
-> **In deinem HACS noch nicht zu finden?** Dann füge sie als benutzerdefiniertes
-> Repository hinzu: HACS → ⋮ → **Benutzerdefinierte Repositories** (*Custom
-> repositories*) → `https://github.com/renespeaker/ha-family-task-integration`, Typ
-> **Integration**.
+> **Noch nicht zu finden?** Dann füge sie als benutzerdefiniertes Repository hinzu
+> (*Custom repositories* im Marketplace oder in HACS):
+> `https://github.com/renespeaker/ha-family-task-integration`, Typ **Integration**.
 
 Personen erscheinen mit ihrer ersten Buchung. Nimm die `person.*`-Entität als
 `person` (z. B. `person.lina`), dann heißt das Gerät wie die Person.
