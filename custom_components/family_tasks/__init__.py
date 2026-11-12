@@ -6,13 +6,15 @@ or deduction with `adjust`. With `request_reward` a child asks for a reward:
 its points are reserved and the parents get a push with "approve" / "deny"
 buttons (or decide with the `approve` / `deny` services). With `offer_chore`
 a chore of this round goes to someone else, maybe for points, once they say yes
-with `answer_offer`. Every person gets a points sensor.
+with `answer_offer`. `cover` notes a chore done for someone who was away, and
+`even_out` the one they do in return. Every person gets a points sensor.
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 
 import voluptuous as vol
@@ -38,8 +40,10 @@ from homeassistant.util.ulid import ulid_now
 from .const import (
     ACTION_APPROVE,
     ACTION_DENY,
+    ATTR_ABSENT,
     ATTR_ACCEPT,
     ATTR_CHORE,
+    ATTR_HELPER,
     ATTR_KEY,
     ATTR_OFFER_ID,
     ATTR_PERSON,
@@ -62,7 +66,9 @@ from .const import (
     SERVICE_ANSWER_OFFER,
     SERVICE_APPROVE,
     SERVICE_AWARD,
+    SERVICE_COVER,
     SERVICE_DENY,
+    SERVICE_EVEN_OUT,
     SERVICE_OFFER_CHORE,
     SERVICE_REDEEM,
     SERVICE_REQUEST_REWARD,
@@ -71,7 +77,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .ledger import InsufficientPoints, Ledger, Offer, OfferRefused, Request
+from .ledger import COVER_DAYS, InsufficientPoints, Ledger, Offer, OfferRefused, Request
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +123,21 @@ OFFER_SCHEMA = vol.Schema(
 )
 ANSWER_SCHEMA = vol.Schema(
     {vol.Required(ATTR_OFFER_ID): KEY, vol.Required(ATTR_ACCEPT): cv.boolean}
+)
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_KEY): KEY,
+        vol.Required(ATTR_PERSON): PERSON,
+        vol.Required(ATTR_ABSENT): PERSON,
+        vol.Optional(ATTR_CHORE, default=""): cv.string,
+    }
+)
+EVEN_OUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_KEY): KEY,
+        vol.Required(ATTR_PERSON): PERSON,
+        vol.Required(ATTR_HELPER): PERSON,
+    }
 )
 
 # Push texts, by Home Assistant language (English otherwise).
@@ -194,10 +215,16 @@ def _offers_changed(hass: HomeAssistant, data: FamilyTasksData, persons: set[str
 
 @callback
 def _prune(hass: HomeAssistant, data: FamilyTasksData) -> None:
-    """Forget offers whose round is over."""
-    gone = data.ledger.prune(dt_util.now().date().isoformat())
-    if gone:
-        _offers_changed(hass, data, {p for o in gone for p in (o.sender, o.receiver)})
+    """Forget offers whose round is over, and covers that no longer matter."""
+    today = dt_util.now().date()
+    gone = data.ledger.prune(today.isoformat())
+    old = data.ledger.prune_covers(
+        today.isoformat(), (today - timedelta(days=COVER_DAYS)).isoformat()
+    )
+    persons = {p for o in gone for p in (o.sender, o.receiver)}
+    persons |= {p for c in old for p in (c.helper, c.absent)}
+    if persons:
+        _offers_changed(hass, data, persons)
 
 
 def _offer_event(off: Offer) -> dict[str, Any]:
@@ -312,6 +339,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         gone = data.ledger.revoke(call.data[ATTR_KEY])
         if gone:
             _changed(hass, data, gone.person, "revoke", -gone.points, gone.label)
+        # a chore done for someone, or in return, no longer counts either
+        undone = data.ledger.undo_cover(call.data[ATTR_KEY])
+        if undone:
+            _offers_changed(hass, data, {p for c in undone for p in (c.helper, c.absent)})
         return {"revoked": gone is not None}
 
     async def redeem(call: ServiceCall) -> ServiceResponse:
@@ -414,6 +445,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_fire(EVENT_CHORE_ANSWERED, {**_offer_event(off), "accepted": accept})
         return {"answered": True}
 
+    async def cover(call: ServiceCall) -> ServiceResponse:
+        data = _loaded_entry(hass).runtime_data
+        helper, absent = call.data[ATTR_PERSON], call.data[ATTR_ABSENT]
+        if helper == absent:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="offer_self")
+        noted = data.ledger.cover(
+            call.data[ATTR_KEY], helper, absent, call.data[ATTR_CHORE], _now()
+        )
+        if noted:
+            _offers_changed(hass, data, {helper, absent})
+        return {"covered": noted is not None}
+
+    async def even_out(call: ServiceCall) -> ServiceResponse:
+        data = _loaded_entry(hass).runtime_data
+        person, helper = call.data[ATTR_PERSON], call.data[ATTR_HELPER]
+        done = data.ledger.even_out(call.data[ATTR_KEY], person, helper)
+        if done:
+            _offers_changed(hass, data, {person, helper})
+        return {"evened": done is not None}
+
     for name, handler, schema in (
         (SERVICE_AWARD, award, AWARD_SCHEMA),
         (SERVICE_REVOKE, revoke, REVOKE_SCHEMA),
@@ -424,6 +475,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         (SERVICE_DENY, deny, DECIDE_SCHEMA),
         (SERVICE_OFFER_CHORE, offer_chore, OFFER_SCHEMA),
         (SERVICE_ANSWER_OFFER, answer_offer, ANSWER_SCHEMA),
+        (SERVICE_COVER, cover, COVER_SCHEMA),
+        (SERVICE_EVEN_OUT, even_out, EVEN_OUT_SCHEMA),
     ):
         hass.services.async_register(
             DOMAIN, name, handler, schema=schema, supports_response=SupportsResponse.OPTIONAL

@@ -107,6 +107,17 @@ class PointsSensor(SensorEntity):
                 }
                 for o in ledger.offers_of(self._person)
             ],
+            # chores done for someone away, and whether they evened it out
+            "covers": [
+                {
+                    "key": c.key,
+                    "helper": c.helper,
+                    "absent": c.absent,
+                    "chore": c.chore,
+                    "settled_by": c.settled_by,
+                }
+                for c in ledger.covers_of(self._person)
+            ],
             "last_booking": last.label if last else None,
             "last_booking_at": last.at if last else None,
             **self._stats(),

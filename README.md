@@ -12,16 +12,17 @@ cleared, and chores that reopen every round can't earn any. With this
 integration, **every point is booked and kept**, and each person gets a points
 sensor.
 
-> **Status: v0.4.0 — points ledger, reward approval by push, statistics, handing
-> chores over.** Use it with the Family Task Card v0.14.0 or newer
-> (`points_backend: true`); handing chores over needs card v0.20.0. Formerly
-> called *Family Tasks* — only the name changed.
+> **Status: v0.5.0 — points ledger, reward approval by push, statistics, handing
+> chores over, making up for chores done for someone away.** Use it with the
+> Family Task Card v0.14.0 or newer (`points_backend: true`); handing chores over
+> needs card v0.20.0, making up for them card v0.21.0. Formerly called *Family
+> Tasks* — only the name changed.
 
 ## What you get
 
 - **A points sensor per person**, e.g. `sensor.lina_points` — spendable points as
-  the state, plus `earned`, `redeemed`, `reserved`, `pending` requests and chore
-  `offers`. Works with history graphs, statistics and automations.
+  the state, plus `earned`, `redeemed`, `reserved`, `pending` requests, chore
+  `offers` and `covers`. Works with history graphs, statistics and automations.
 - **Bookings that never count twice.** Every award has a unique key (the card uses
   list + task, plus the round for rotating chores). When phone and wall tablet
   both report the same task, it is booked once.
@@ -37,6 +38,8 @@ sensor.
   | `family_tasks.approve` / `deny` | decide a request (`request_id`) — or tap the button in the push |
   | `family_tasks.offer_chore` | hand a chore of this round to someone else, maybe for points (`key`, `person`, `to`, `points`, `chore`, `until`) |
   | `family_tasks.answer_offer` | take the chore over, turn it down or withdraw the offer (`offer_id`, `accept`) |
+  | `family_tasks.cover` | note a chore done for someone who was away (`key`, `person`, `absent`, `chore`) |
+  | `family_tasks.even_out` | note the chore they did in return (`key`, `person`, `helper`) |
 
   All return the new balance (`return_response`).
 - **An event** `family_tasks_points_changed` for every booking — e.g. to flash a
@@ -83,6 +86,22 @@ to Ben, maybe for 10 points (`family_tasks.offer_chore`, or the card with
 Events for your own automations, e.g. a push to Ben's phone:
 `family_tasks_chore_offered` and `family_tasks_chore_answered` (with
 `accepted: true/false`).
+
+## Making up for it
+
+When someone is away, the card hands their chores to the others. The ledger
+remembers who covered for whom, so it can be made up later (card option
+*catch up*):
+
+- Lina does Ben's chore while he is away: `family_tasks.cover` notes that Ben
+  owes Lina one. Every device may report it; it counts once.
+- Back home, Ben gets one of Lina's chores in a later round. Once he has done
+  it, `family_tasks.even_out` settles the oldest chore he owed her.
+- Unchecking either chore undoes its part (`family_tasks.revoke`): a chore Lina
+  unchecks is no longer owed, and one Ben unchecks is owed again.
+- Covers that were evened out are forgotten after their round; ones nobody
+  evened out after 60 days.
+- Each sensor lists the covers its person did or got (`covers`).
 
 ## Statistics
 

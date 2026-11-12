@@ -178,6 +178,46 @@
           "description": "Yes takes the chore over; no turns it down or withdraws it."
         }
       }
+    },
+    "cover": {
+      "name": "Cover for someone",
+      "description": "Notes that a person did a chore for someone who was away; that person owes one back. Noted once per key.",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "The chore done for them, as the card books it."
+        },
+        "person": {
+          "name": "Helper",
+          "description": "Who did the chore."
+        },
+        "absent": {
+          "name": "Away",
+          "description": "Who was away and owes one back."
+        },
+        "chore": {
+          "name": "Chore",
+          "description": "Name of the chore, for the history."
+        }
+      }
+    },
+    "even_out": {
+      "name": "Even it out",
+      "description": "A person did a chore in return for someone who covered for them: settles their oldest open cover. Counted once per key.",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "The chore done in return, as the card books it."
+        },
+        "person": {
+          "name": "Person",
+          "description": "Who was away and now did one in return."
+        },
+        "helper": {
+          "name": "Helper",
+          "description": "Who covered for them."
+        }
+      }
     }
   },
   "options": {

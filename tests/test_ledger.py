@@ -190,3 +190,53 @@ def test_offers_survive_storage_and_bring_their_people():
     assert again.persons() == ["Lina", "Ben"]
     # a v0.3 store without offers still loads
     assert Ledger.from_dict({"bookings": [], "requests": []}).offers == []
+
+
+def test_covering_is_noted_once_and_evened_out_by_a_chore_in_return():
+    led = Ledger()
+    assert led.cover("k1|2026-10-11", "Lina", "Ben", "Bins", T).absent == "Ben"
+    assert led.cover("k1|2026-10-11", "Lina", "Ben", "Bins", T) is None  # second device
+    led.cover("k2|2026-10-11", "Lina", "Ben", "Dishes", T)
+    done = led.even_out("k3|2026-10-18", "Ben", "Lina")
+    assert done.key == "k1|2026-10-11"  # the oldest first
+    assert led.even_out("k3|2026-10-18", "Ben", "Lina") is None  # counted once
+    assert [c.settled_by for c in led.covers] == ["k3|2026-10-18", None]
+    assert led.even_out("k4|2026-10-18", "Ben", "Mia") is None  # he owes Mia nothing
+    with pytest.raises(ValueError):
+        led.cover("k5", "Lina", "Lina", "Bins", T)
+
+
+def test_unchecking_undoes_a_cover_or_reopens_what_it_settled():
+    led = Ledger()
+    led.cover("k1|2026-10-11", "Lina", "Ben", "Bins", T)
+    led.cover("k2|2026-10-11", "Lina", "Ben", "Dishes", T)
+    led.even_out("k3|2026-10-18", "Ben", "Lina")
+    # Ben unchecks the chore he did in return: he owes it again
+    assert [c.key for c in led.undo_cover("k3|2026-10-18")] == ["k1|2026-10-11"]
+    assert [c.settled_by for c in led.covers] == [None, None]
+    # Lina unchecks a chore she did for him: nothing owed for it
+    led.undo_cover("k2|2026-10-11")
+    assert [c.key for c in led.covers] == ["k1|2026-10-11"]
+    assert led.undo_cover("nothing") == []
+
+
+def test_covers_are_forgotten_once_they_no_longer_matter():
+    led = Ledger()
+    led.cover("k1|2026-10-11", "Lina", "Ben", "Bins", "2026-08-01T10:00:00+00:00")
+    led.cover("k2|2026-10-11", "Lina", "Ben", "Dishes", "2026-10-09T10:00:00+00:00")
+    led.cover("k3|2026-10-11", "Mia", "Ben", "Plants", "2026-10-09T10:00:00+00:00")
+    led.even_out("k9|2026-10-18", "Ben", "Mia")
+    gone = led.prune_covers(today="2026-10-19", since="2026-08-20")
+    assert [c.key for c in gone] == ["k1|2026-10-11", "k3|2026-10-11"]  # too old / round over
+    assert [c.key for c in led.covers] == ["k2|2026-10-11"]
+
+
+def test_covers_survive_storage_and_bring_their_people():
+    led = Ledger()
+    led.cover("k1|2026-10-11", "Lina", "Ben", "Bins", T)
+    led.even_out("k3|2026-10-18", "Ben", "Lina")
+    again = Ledger.from_dict(led.as_dict())
+    assert again == led
+    assert again.persons() == ["Lina", "Ben"]
+    assert again.covers_of("Ben")[0].settled_by == "k3|2026-10-18"
+    assert Ledger.from_dict({"bookings": [], "offers": []}).covers == []

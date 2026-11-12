@@ -15,6 +15,10 @@ A chore can be handed to someone else for one round, maybe for points: the
 offer reserves them until the other person takes the chore (the points move
 over as a transfer) or turns it down. A transfer changes what someone can
 spend, not what they earned: it is no work done. Offers end with their round.
+
+Someone who does a chore for a person who is away covers for them: the
+ledger notes it, and the person owes one back. A chore they later do in
+return evens it out. Unchecking either chore undoes its part.
 """
 
 from __future__ import annotations
@@ -82,6 +86,22 @@ class Offer:
 
 
 @dataclass(frozen=True)
+class Cover:
+    """A chore done for someone who was away: they owe one back."""
+
+    key: str  # the chore done for them, as the card books it
+    helper: str
+    absent: str
+    chore: str
+    at: str
+    settled_by: str | None = None  # the chore that evened it out
+
+
+# Covers nobody evened out are forgotten after this many days.
+COVER_DAYS = 60
+
+
+@dataclass(frozen=True)
 class Totals:
     """What a person has: earned (awards + adjustments), redeemed, transfers and the rest."""
 
@@ -101,6 +121,7 @@ class Ledger:
     bookings: list[Booking] = field(default_factory=list)
     requests: list[Request] = field(default_factory=list)
     offers: list[Offer] = field(default_factory=list)
+    covers: list[Cover] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> Ledger:
@@ -110,6 +131,7 @@ class Ledger:
             [Booking(**b) for b in data.get("bookings", [])],
             [Request(**r) for r in data.get("requests", [])],
             [Offer(**o) for o in data.get("offers", [])],
+            [Cover(**c) for c in data.get("covers", [])],
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -117,6 +139,7 @@ class Ledger:
             "bookings": [asdict(b) for b in self.bookings],
             "requests": [asdict(r) for r in self.requests],
             "offers": [asdict(o) for o in self.offers],
+            "covers": [asdict(c) for c in self.covers],
         }
 
     def _award_index(self, key: str) -> int | None:
@@ -237,6 +260,62 @@ class Ledger:
             return taken
         return None
 
+    def cover(self, key: str, helper: str, absent: str, chore: str, at: str) -> Cover | None:
+        """Note that `helper` did a chore for `absent`. None if already noted."""
+        if helper == absent:
+            raise ValueError("a person can't cover for themselves")
+        if any(c.key == key for c in self.covers):
+            return None
+        c = Cover(key, helper, absent, chore, at)
+        self.covers.append(c)
+        return c
+
+    def even_out(self, key: str, person: str, helper: str) -> Cover | None:
+        """`person` did a chore for `helper` in return: settles their oldest open cover.
+
+        None when this chore already evened one out or nothing is owed.
+        """
+        if any(c.settled_by == key for c in self.covers):
+            return None
+        for i, c in enumerate(self.covers):
+            if c.settled_by is None and c.absent == person and c.helper == helper:
+                done = replace(c, settled_by=key)
+                self.covers[i] = done
+                return done
+        return None
+
+    def undo_cover(self, key: str) -> list[Cover]:
+        """A chore was unchecked: forget the cover it was, reopen the one it settled."""
+        touched: list[Cover] = []
+        keep: list[Cover] = []
+        for c in self.covers:
+            if c.key == key:
+                touched.append(c)  # the chore done for them is undone
+                continue
+            if c.settled_by == key:
+                c = replace(c, settled_by=None)  # owed again
+                touched.append(c)
+            keep.append(c)
+        self.covers = keep
+        return touched
+
+    def covers_of(self, person: str) -> list[Cover]:
+        """Covers this person did or got, oldest first."""
+        return [c for c in self.covers if person in (c.helper, c.absent)]
+
+    def prune_covers(self, today: str, since: str) -> list[Cover]:
+        """Forget covers evened out in a round that is over, and open ones from before `since`."""
+
+        def stale(c: Cover) -> bool:
+            if c.settled_by is not None:
+                return c.settled_by.rsplit("|", 1)[-1] < today
+            return c.at[:10] < since
+
+        gone = [c for c in self.covers if stale(c)]
+        if gone:
+            self.covers = [c for c in self.covers if not stale(c)]
+        return gone
+
     def offers_of(self, person: str) -> list[Offer]:
         """Offers this person made or got, oldest first."""
         return [o for o in self.offers if person in (o.sender, o.receiver)]
@@ -277,4 +356,7 @@ class Ledger:
         for o in self.offers:
             seen.setdefault(o.sender, None)
             seen.setdefault(o.receiver, None)
+        for c in self.covers:
+            seen.setdefault(c.helper, None)
+            seen.setdefault(c.absent, None)
         return list(seen)

@@ -178,6 +178,46 @@
           "description": "Ja übernimmt das Ämtli; Nein lehnt ab oder zieht zurück."
         }
       }
+    },
+    "cover": {
+      "name": "Einspringen vermerken",
+      "description": "Vermerkt, dass jemand ein Ämtli für eine abwesende Person erledigt hat; diese schuldet eins zurück. Einmal pro Schlüssel.",
+      "fields": {
+        "key": {
+          "name": "Schlüssel",
+          "description": "Das Ämtli, das für sie erledigt wurde, so wie die Karte es bucht."
+        },
+        "person": {
+          "name": "Helfer",
+          "description": "Wer das Ämtli erledigt hat."
+        },
+        "absent": {
+          "name": "Abwesend",
+          "description": "Wer weg war und eins zurückschuldet."
+        },
+        "chore": {
+          "name": "Ämtli",
+          "description": "Name des Ämtlis, für den Verlauf."
+        }
+      }
+    },
+    "even_out": {
+      "name": "Ausgleichen",
+      "description": "Eine Person hat im Gegenzug ein Ämtli für jemanden erledigt, der für sie eingesprungen war: begleicht ihre älteste offene Schuld. Einmal pro Schlüssel.",
+      "fields": {
+        "key": {
+          "name": "Schlüssel",
+          "description": "Das Ämtli zum Ausgleich, so wie die Karte es bucht."
+        },
+        "person": {
+          "name": "Person",
+          "description": "Wer weg war und jetzt ausgleicht."
+        },
+        "helper": {
+          "name": "Helfer",
+          "description": "Wer für sie eingesprungen war."
+        }
+      }
     }
   },
   "options": {

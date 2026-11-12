@@ -19,6 +19,8 @@ SERVICE_APPROVE = "approve"
 SERVICE_DENY = "deny"
 SERVICE_OFFER_CHORE = "offer_chore"
 SERVICE_ANSWER_OFFER = "answer_offer"
+SERVICE_COVER = "cover"
+SERVICE_EVEN_OUT = "even_out"
 
 ATTR_KEY = "key"
 ATTR_PERSON = "person"
@@ -32,6 +34,8 @@ ATTR_CHORE = "chore"
 ATTR_UNTIL = "until"
 ATTR_OFFER_ID = "offer_id"
 ATTR_ACCEPT = "accept"
+ATTR_ABSENT = "absent"
+ATTR_HELPER = "helper"
 
 # Options: notify services (e.g. "mobile_app_moms_phone") that get approval pushes.
 CONF_NOTIFY = "notify"

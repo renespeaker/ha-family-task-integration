@@ -33,6 +33,12 @@
     },
     "answer_offer": {
       "service": "mdi:handshake"
+    },
+    "cover": {
+      "service": "mdi:account-switch"
+    },
+    "even_out": {
+      "service": "mdi:scale-balance"
     }
   }
 }

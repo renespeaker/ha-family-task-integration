@@ -145,3 +145,41 @@ answer_offer:
       example: true
       selector:
         boolean:
+cover:
+  fields:
+    key:
+      required: true
+      example: "todo.chores|a1b2c3|2026-10-11"
+      selector:
+        text:
+    person:
+      required: true
+      example: "person.lina"
+      selector:
+        text:
+    absent:
+      required: true
+      example: "person.ben"
+      selector:
+        text:
+    chore:
+      example: "Take out the bins"
+      selector:
+        text:
+even_out:
+  fields:
+    key:
+      required: true
+      example: "todo.chores|d4e5f6|2026-10-18"
+      selector:
+        text:
+    person:
+      required: true
+      example: "person.ben"
+      selector:
+        text:
+    helper:
+      required: true
+      example: "person.lina"
+      selector:
+        text:
