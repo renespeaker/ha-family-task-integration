@@ -76,13 +76,20 @@ day it is booked — the card books a task when it sees it checked off.
 
 ## Installation
 
-### Via HACS (custom repository)
+### Via HACS (recommended)
 
-1. HACS → ⋮ → **Custom repositories** → add
-   `https://github.com/renespeaker/ha-family-task-integration`, type **Integration**.
-2. Search **Family Tasks** → **Download** → restart Home Assistant.
-3. **Settings → Devices & services → Add integration → Family Tasks** → Submit.
-   There is nothing to fill in.
+[![Open Family Tasks in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
+[![Add the Family Tasks integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
+
+1. In **HACS**, search for **"Family Tasks"** and download it (or use the first
+   button above), then restart Home Assistant.
+2. Add the integration with the second button, or via **Settings → Devices &
+   services → Add integration → Family Tasks** → Submit. There is nothing to
+   fill in.
+
+> **Not listed in your HACS yet?** Add it as a custom repository instead: HACS →
+> ⋮ → **Custom repositories** → `https://github.com/renespeaker/ha-family-task-integration`,
+> type **Integration**.
 
 People appear with their first booking. Use the `person.*` entity as `person`
 (e.g. `person.lina`) and the device is named after the person.

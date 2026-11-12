@@ -79,13 +79,21 @@ abgehakt sieht.
 
 ## Installation
 
-### Über HACS (benutzerdefiniertes Repository)
+### Über HACS (empfohlen)
 
-1. HACS → ⋮ → **Benutzerdefinierte Repositories** →
-   `https://github.com/renespeaker/ha-family-task-integration` hinzufügen, Typ **Integration**.
-2. Nach **Family Tasks** suchen → **Herunterladen** → Home Assistant neu starten.
-3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Family Tasks** →
-   Absenden. Es gibt nichts auszufüllen.
+[![Family Tasks in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
+[![Integration Family Tasks hinzufügen](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
+
+1. In **HACS** nach **„Family Tasks"** suchen und herunterladen (oder den ersten
+   Button oben nutzen), dann Home Assistant neu starten.
+2. Die Integration mit dem zweiten Button hinzufügen oder über **Einstellungen →
+   Geräte & Dienste → Integration hinzufügen → Family Tasks** → Absenden. Es gibt
+   nichts auszufüllen.
+
+> **In deinem HACS noch nicht zu finden?** Dann füge sie als benutzerdefiniertes
+> Repository hinzu: HACS → ⋮ → **Benutzerdefinierte Repositories** (*Custom
+> repositories*) → `https://github.com/renespeaker/ha-family-task-integration`, Typ
+> **Integration**.
 
 Personen erscheinen mit ihrer ersten Buchung. Nimm die `person.*`-Entität als
 `person` (z. B. `person.lina`), dann heißt das Gerät wie die Person.
