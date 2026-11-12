@@ -1,6 +1,9 @@
 {
   "domain": "family_tasks",
-  "name": "Family Tasks",
+  "name": "Family Task Card Integration",
+  "categories": [
+    "productivity_information.calendars_todos"
+  ],
   "codeowners": [
     "@renespeaker"
   ],
@@ -11,5 +14,5 @@
   "issue_tracker": "https://github.com/renespeaker/ha-family-task-integration/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.3.2"
+  "version": "0.3.3"
 }

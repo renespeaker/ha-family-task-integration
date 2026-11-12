@@ -1,6 +1,8 @@
-"""Constants for Family Tasks."""
+"""Constants for the Family Task Card Integration."""
 
 DOMAIN = "family_tasks"
+# Shown in HA; the domain, services and sensors keep the name family_tasks.
+NAME = "Family Task Card Integration"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1

@@ -1,19 +1,20 @@
-# ⭐ Family Tasks
+# ⭐ Family Task Card Integration
 
 > 🌐 **Deutsch** (diese Seite) · [English](README.md)
 
-![Family-Tasks-Icon](custom_components/family_tasks/brand/icon.png)
+![Icon der Family Task Card Integration](custom_components/family_tasks/brand/icon.png)
 
 Ein **dauerhaftes Punktekonto** für die
 [Family Task Card](https://github.com/renespeaker/ha-family-task-card) in
 [Home Assistant](https://www.home-assistant.io/). Ohne sie berechnet die Karte
 Punkte live aus den abgehakten Aufgaben – einfach, aber Punkte verschwinden,
 wenn eine Liste geleert wird, und Ämtli, die jede Runde wieder öffnen, können
-keine bekommen. Mit Family Tasks wird **jeder Punkt gebucht und bleibt**, und jede
-Person bekommt einen Punkte-Sensor.
+keine bekommen. Mit dieser Integration wird **jeder Punkt gebucht und bleibt**,
+und jede Person bekommt einen Punkte-Sensor.
 
-> **Stand: v0.3.2 – Punktekonto, Belohnungs-Freigabe per Push, Statistik.**
+> **Stand: v0.3.3 – Punktekonto, Belohnungs-Freigabe per Push, Statistik.**
 > Zusammen mit der Family Task Card ab v0.14.0 nutzen (`points_backend: true`).
+> Früher hieß sie *Family Tasks* – nur der Name ist neu.
 
 ## Was du bekommst
 
@@ -54,8 +55,8 @@ bekommen eine **Push-Nachricht mit „Freigeben" / „Ablehnen"** aufs Handy:
 - Offene Anfragen überstehen Neustarts und stehen im Sensor (`reserved`,
   `pending`).
 
-**Wer die Push bekommt:** Einstellungen → Geräte & Dienste → Family Tasks →
-**Konfigurieren** → die Benachrichtigungsdienste der Eltern-Handys wählen
+**Wer die Push bekommt:** Einstellungen → Geräte & Dienste → Family Task Card
+Integration → **Konfigurieren** → die Benachrichtigungsdienste der Eltern-Handys wählen
 (`notify.mobile_app_…`, aus der Home-Assistant-Companion-App). Ohne Ziel lassen
 sich Anfragen trotzdem mit `family_tasks.approve` / `deny` entscheiden.
 
@@ -79,13 +80,22 @@ abgehakt sieht.
 
 ## Installation
 
-### Über HACS (benutzerdefiniertes Repository)
+### Über den Marketplace oder HACS (empfohlen)
 
-1. HACS → ⋮ → **Benutzerdefinierte Repositories** →
-   `https://github.com/renespeaker/ha-family-task-integration` hinzufügen, Typ **Integration**.
-2. Nach **Family Tasks** suchen → **Herunterladen** → Home Assistant neu starten.
-3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Family Tasks** →
+[![Family Task Card Integration im Marketplace oder in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
+[![Family Task Card Integration hinzufügen](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
+
+1. Ab Home Assistant 2026.11: **Einstellungen → Marketplace**, nach
+   **„Family Task Card Integration"** suchen und installieren. Ältere
+   Versionen: in **HACS** herunterladen und Home Assistant neu starten. Der
+   erste Button oben öffnet das Richtige.
+2. Die Integration mit dem zweiten Button hinzufügen oder über **Einstellungen →
+   Geräte & Dienste → Integration hinzufügen → Family Task Card Integration** →
    Absenden. Es gibt nichts auszufüllen.
+
+> **Noch nicht zu finden?** Dann füge sie als benutzerdefiniertes Repository hinzu
+> (*Custom repositories* im Marketplace oder in HACS):
+> `https://github.com/renespeaker/ha-family-task-integration`, Typ **Integration**.
 
 Personen erscheinen mit ihrer ersten Buchung. Nimm die `person.*`-Entität als
 `person` (z. B. `person.lina`), dann heißt das Gerät wie die Person.
