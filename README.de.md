@@ -12,17 +12,18 @@ wenn eine Liste geleert wird, und Ämtli, die jede Runde wieder öffnen, können
 keine bekommen. Mit dieser Integration wird **jeder Punkt gebucht und bleibt**,
 und jede Person bekommt einen Punkte-Sensor.
 
-> **Stand: v0.4.0 – Punktekonto, Belohnungs-Freigabe per Push, Statistik, Ämtli
-> abgeben.** Zusammen mit der Family Task Card ab v0.14.0 nutzen
-> (`points_backend: true`); Ämtli abgeben braucht die Karte ab v0.20.0. Früher
-> hieß sie *Family Tasks* – nur der Name ist neu.
+> **Stand: v0.5.0 – Punktekonto, Belohnungs-Freigabe per Push, Statistik, Ämtli
+> abgeben, Ausgleich fürs Einspringen.** Zusammen mit der Family Task Card ab
+> v0.14.0 nutzen (`points_backend: true`); Ämtli abgeben braucht die Karte ab
+> v0.20.0, den Ausgleich ab v0.21.0. Früher hieß sie *Family Tasks* – nur der Name
+> ist neu.
 
 ## Was du bekommst
 
 - **Einen Punkte-Sensor pro Person**, z. B. `sensor.lina_punkte` – ausgebbare Punkte
   als Zustand, dazu `earned` (verdient), `redeemed` (eingelöst), `reserved`
-  (reserviert), offene Anfragen (`pending`) und Ämtli-Angebote (`offers`).
-  Funktioniert mit Verlauf, Statistik und Automationen.
+  (reserviert), offene Anfragen (`pending`), Ämtli-Angebote (`offers`) und
+  Einspringen (`covers`). Funktioniert mit Verlauf, Statistik und Automationen.
 - **Buchungen, die nie doppelt zählen.** Jede Gutschrift hat einen eindeutigen
   Schlüssel (die Karte nimmt Liste + Aufgabe, bei Ämtli zusätzlich die Runde).
   Melden Handy und Wandtablet dieselbe Aufgabe, wird sie einmal gebucht.
@@ -38,6 +39,8 @@ und jede Person bekommt einen Punkte-Sensor.
   | `family_tasks.approve` / `deny` | Anfrage entscheiden (`request_id`) – oder den Knopf in der Push antippen |
   | `family_tasks.offer_chore` | ein Ämtli dieser Runde an jemand anderen abgeben, auf Wunsch gegen Punkte (`key`, `person`, `to`, `points`, `chore`, `until`) |
   | `family_tasks.answer_offer` | das Ämtli übernehmen, ablehnen oder das Angebot zurückziehen (`offer_id`, `accept`) |
+  | `family_tasks.cover` | vermerken, dass jemand ein Ämtli für eine abwesende Person erledigt hat (`key`, `person`, `absent`, `chore`) |
+  | `family_tasks.even_out` | das Ämtli vermerken, das sie im Gegenzug erledigt hat (`key`, `person`, `helper`) |
 
   Alle liefern den neuen Kontostand zurück (`return_response`).
 - **Ein Ereignis** `family_tasks_points_changed` bei jeder Buchung – z. B. um ein
@@ -86,6 +89,25 @@ Karte mit eingeschaltetem *Ämtli abgeben*).
 Ereignisse für eigene Automationen, z. B. eine Push an Bens Handy:
 `family_tasks_chore_offered` und `family_tasks_chore_answered` (mit
 `accepted: true/false`).
+
+## Ausgleich fürs Einspringen
+
+Ist jemand weg, verteilt die Karte seine Ämtli auf die anderen. Das Punktekonto
+merkt sich, wer für wen eingesprungen ist, damit das später ausgeglichen werden
+kann (Karten-Option *Nachholen*):
+
+- Lina erledigt Bens Ämtli, während er weg ist: `family_tasks.cover` vermerkt,
+  dass Ben Lina eins schuldet. Jedes Gerät darf das melden; es zählt einmal.
+- Wieder zu Hause, bekommt Ben in einer späteren Runde eines von Linas Ämtli.
+  Hat er es erledigt, begleicht `family_tasks.even_out` das älteste Ämtli, das er
+  ihr schuldete.
+- Haken weg macht den jeweiligen Teil rückgängig (`family_tasks.revoke`): Ein
+  Ämtli, das Lina wieder öffnet, ist nicht mehr geschuldet; eines, das Ben wieder
+  öffnet, wieder geschuldet.
+- Ausgeglichenes wird nach seiner Runde vergessen, nie Ausgeglichenes nach 60
+  Tagen.
+- Jeder Sensor zeigt, wo seine Person eingesprungen ist oder wer für sie
+  (`covers`).
 
 ## Statistik
 
