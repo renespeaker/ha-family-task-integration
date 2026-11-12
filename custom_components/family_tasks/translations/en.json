@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Family Tasks",
+        "title": "Family Task Card Integration",
         "description": "Adds a points ledger for the Family Task Card. Nothing to set up: people appear with their first booking."
       }
     }
@@ -16,7 +16,7 @@
   },
   "exceptions": {
     "not_loaded": {
-      "message": "Family Tasks is not set up yet."
+      "message": "The Family Task Card Integration is not set up yet."
     },
     "insufficient_points": {
       "message": "{person} has {balance} points, the reward costs {points}."

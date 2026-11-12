@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Family Tasks",
+        "title": "Family Task Card Integration",
         "description": "Fügt ein Punktekonto für die Family Task Card hinzu. Nichts einzurichten: Personen erscheinen mit ihrer ersten Buchung."
       }
     }
@@ -16,7 +16,7 @@
   },
   "exceptions": {
     "not_loaded": {
-      "message": "Family Tasks ist noch nicht eingerichtet."
+      "message": "Die Family Task Card Integration ist noch nicht eingerichtet."
     },
     "insufficient_points": {
       "message": "{person} hat {balance} Punkte, die Belohnung kostet {points}."

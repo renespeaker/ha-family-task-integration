@@ -1,6 +1,6 @@
 {
   "domain": "family_tasks",
-  "name": "Family Tasks",
+  "name": "Family Task Card Integration",
   "categories": [
     "productivity_information.calendars_todos"
   ],

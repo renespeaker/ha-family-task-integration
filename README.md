@@ -1,18 +1,20 @@
-# ⭐ Family Tasks
+# ⭐ Family Task Card Integration
 
 > 🌐 **English** (this page) · [Deutsch](README.de.md)
 
-![Family Tasks icon](custom_components/family_tasks/brand/icon.png)
+![Family Task Card Integration icon](custom_components/family_tasks/brand/icon.png)
 
 A **persistent points ledger** for the
 [Family Task Card](https://github.com/renespeaker/ha-family-task-card) in
 [Home Assistant](https://www.home-assistant.io/). Without it, the card works out
 points live from checked-off tasks — simple, but points disappear when a list is
-cleared, and chores that reopen every round can't earn any. With Family Tasks,
-**every point is booked and kept**, and each person gets a points sensor.
+cleared, and chores that reopen every round can't earn any. With this
+integration, **every point is booked and kept**, and each person gets a points
+sensor.
 
 > **Status: v0.3.3 — points ledger, reward approval by push, statistics.** Use it
-> with the Family Task Card v0.14.0 or newer (`points_backend: true`).
+> with the Family Task Card v0.14.0 or newer (`points_backend: true`). Formerly
+> called *Family Tasks* — only the name changed.
 
 ## What you get
 
@@ -52,8 +54,8 @@ ask for more than is left — and the parents get a **push with "Approve" /
 - Open requests are kept across restarts and show up in the sensor
   (`reserved`, `pending`).
 
-**Who gets the push:** Settings → Devices & services → Family Tasks →
-**Configure** → pick the notify services of the parents' phones
+**Who gets the push:** Settings → Devices & services → Family Task Card
+Integration → **Configure** → pick the notify services of the parents' phones
 (`notify.mobile_app_…`, from the Home Assistant Companion app). Without a target,
 requests can still be decided with `family_tasks.approve` / `deny`.
 
@@ -78,15 +80,16 @@ day it is booked — the card books a task when it sees it checked off.
 
 ### Via the Marketplace or HACS (recommended)
 
-[![Open Family Tasks in the Marketplace or HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
-[![Add the Family Tasks integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
+[![Open the Family Task Card Integration in the Marketplace or HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renespeaker&repository=ha-family-task-integration&category=integration)
+[![Add the Family Task Card Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=family_tasks)
 
 1. Home Assistant 2026.11 or newer: **Settings → Marketplace**, search for
-   **"Family Tasks"** and install it. Older versions: download it in **HACS** and
-   restart Home Assistant. The first button above opens the right one.
+   **"Family Task Card Integration"** and install it. Older versions: download
+   it in **HACS** and restart Home Assistant. The first button above opens the
+   right one.
 2. Add the integration with the second button, or via **Settings → Devices &
-   services → Add integration → Family Tasks** → Submit. There is nothing to
-   fill in.
+   services → Add integration → Family Task Card Integration** → Submit. There
+   is nothing to fill in.
 
 > **Not listed yet?** Add it as a custom repository (*Custom repositories* in the
 > Marketplace or in HACS): `https://github.com/renespeaker/ha-family-task-integration`,

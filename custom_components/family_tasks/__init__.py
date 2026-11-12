@@ -1,4 +1,4 @@
-"""Family Tasks: a persistent points ledger for the Family Task Card.
+"""Family Task Card Integration: a persistent points ledger for the Family Task Card.
 
 The card reports checked-off tasks with `family_tasks.award` (and takes them
 back with `revoke`); rewards are paid with `redeem`, parents can give a bonus
@@ -179,7 +179,7 @@ async def _notify_parents(
     for target in entry.options.get(CONF_NOTIFY, []):
         if not hass.services.has_service("notify", target):
             _LOGGER.warning(
-                "notify.%s not found - pick the parents' phones again in the Family Tasks options",
+                "notify.%s not found - pick the parents' phones again in the integration options",
                 target,
             )
             continue

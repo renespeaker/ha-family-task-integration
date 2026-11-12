@@ -23,7 +23,7 @@ from custom_components.family_tasks.const import (
 
 async def _setup(hass: HomeAssistant, notify: list[str] | None = None) -> MockConfigEntry:
     entry = MockConfigEntry(
-        domain=DOMAIN, title="Family Tasks", options={CONF_NOTIFY: notify or []}
+        domain=DOMAIN, title="Family Task Card Integration", options={CONF_NOTIFY: notify or []}
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)

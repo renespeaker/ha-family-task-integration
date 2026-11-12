@@ -1,5 +1,7 @@
 """The integration inside Home Assistant: setup, services, sensors, storage."""
 
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -9,11 +11,11 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_capture_events
 
-from custom_components.family_tasks.const import DOMAIN, EVENT_POINTS_CHANGED
+from custom_components.family_tasks.const import DOMAIN, EVENT_POINTS_CHANGED, NAME
 
 
 async def _setup(hass: HomeAssistant) -> MockConfigEntry:
-    entry = MockConfigEntry(domain=DOMAIN, title="Family Tasks")
+    entry = MockConfigEntry(domain=DOMAIN, title="Family Task Card Integration")
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -38,8 +40,23 @@ async def test_config_flow_adds_one_entry(hass: HomeAssistant):
     assert res["type"] is FlowResultType.FORM
     res = await hass.config_entries.flow.async_configure(res["flow_id"], {})
     assert res["type"] is FlowResultType.CREATE_ENTRY
+    assert res["title"] == "Family Task Card Integration"
     again = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
     assert again["type"] is FlowResultType.ABORT
+
+
+def test_one_name_everywhere():
+    """Marketplace/HACS, the integration list and the setup dialog show one name."""
+    repo = Path(__file__).parents[1]
+    comp = repo / "custom_components" / DOMAIN
+
+    def read(path: Path) -> dict[str, Any]:
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    names = {read(repo / "hacs.json")["name"], read(comp / "manifest.json")["name"]}
+    for lang in ("strings.json", "translations/en.json", "translations/de.json"):
+        names.add(read(comp / lang)["config"]["step"]["user"]["title"])
+    assert names == {NAME}
 
 
 async def test_award_creates_a_points_sensor(hass: HomeAssistant):
