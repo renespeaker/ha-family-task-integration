@@ -4,8 +4,9 @@ The card reports checked-off tasks with `family_tasks.award` (and takes them
 back with `revoke`); rewards are paid with `redeem`, parents can give a bonus
 or deduction with `adjust`. With `request_reward` a child asks for a reward:
 its points are reserved and the parents get a push with "approve" / "deny"
-buttons (or decide with the `approve` / `deny` services). Every person gets a
-points sensor.
+buttons (or decide with the `approve` / `deny` services). With `offer_chore`
+a chore of this round goes to someone else, maybe for points, once they say yes
+with `answer_offer`. Every person gets a points sensor.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -36,23 +38,32 @@ from homeassistant.util.ulid import ulid_now
 from .const import (
     ACTION_APPROVE,
     ACTION_DENY,
+    ATTR_ACCEPT,
+    ATTR_CHORE,
     ATTR_KEY,
+    ATTR_OFFER_ID,
     ATTR_PERSON,
     ATTR_POINTS,
     ATTR_REASON,
     ATTR_REQUEST_ID,
     ATTR_REWARD,
     ATTR_TASK,
+    ATTR_TO,
+    ATTR_UNTIL,
     CONF_NOTIFY,
     DOMAIN,
+    EVENT_CHORE_ANSWERED,
+    EVENT_CHORE_OFFERED,
     EVENT_NOTIFICATION_ACTION,
     EVENT_POINTS_CHANGED,
     EVENT_REWARD_DECIDED,
     EVENT_REWARD_REQUESTED,
     SERVICE_ADJUST,
+    SERVICE_ANSWER_OFFER,
     SERVICE_APPROVE,
     SERVICE_AWARD,
     SERVICE_DENY,
+    SERVICE_OFFER_CHORE,
     SERVICE_REDEEM,
     SERVICE_REQUEST_REWARD,
     SERVICE_REVOKE,
@@ -60,7 +71,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .ledger import InsufficientPoints, Ledger, Request
+from .ledger import InsufficientPoints, Ledger, Offer, OfferRefused, Request
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +105,19 @@ ADJUST_SCHEMA = vol.Schema(
     }
 )
 DECIDE_SCHEMA = vol.Schema({vol.Required(ATTR_REQUEST_ID): KEY})
+OFFER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_KEY): KEY,
+        vol.Required(ATTR_PERSON): PERSON,
+        vol.Required(ATTR_TO): PERSON,
+        vol.Optional(ATTR_POINTS, default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(ATTR_CHORE, default=""): cv.string,
+        vol.Optional(ATTR_UNTIL): cv.date,
+    }
+)
+ANSWER_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_OFFER_ID): KEY, vol.Required(ATTR_ACCEPT): cv.boolean}
+)
 
 # Push texts, by Home Assistant language (English otherwise).
 PUSH_TEXT = {
@@ -158,6 +182,33 @@ def _changed(
             "balance": data.ledger.totals(person).balance,
         },
     )
+
+
+@callback
+def _offers_changed(hass: HomeAssistant, data: FamilyTasksData, persons: set[str]) -> None:
+    """Save and refresh the sensors of everyone an offer concerns."""
+    data.store.async_delay_save(data.ledger.as_dict, 1)
+    for person in persons:
+        async_dispatcher_send(hass, SIGNAL_UPDATED, person)
+
+
+@callback
+def _prune(hass: HomeAssistant, data: FamilyTasksData) -> None:
+    """Forget offers whose round is over."""
+    gone = data.ledger.prune(dt_util.now().date().isoformat())
+    if gone:
+        _offers_changed(hass, data, {p for o in gone for p in (o.sender, o.receiver)})
+
+
+def _offer_event(off: Offer) -> dict[str, Any]:
+    return {
+        "offer_id": off.id,
+        "key": off.key,
+        "chore": off.chore,
+        "from": off.sender,
+        "to": off.receiver,
+        "points": off.points,
+    }
 
 
 def _insufficient(person: str, err: InsufficientPoints, points: int) -> ServiceValidationError:
@@ -317,6 +368,52 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         req = await _decide(hass, _loaded_entry(hass), call.data[ATTR_REQUEST_ID], False)
         return {"decided": req is not None}
 
+    async def offer_chore(call: ServiceCall) -> ServiceResponse:
+        data = _loaded_entry(hass).runtime_data
+        _prune(hass, data)
+        sender, receiver, points = (
+            call.data[ATTR_PERSON],
+            call.data[ATTR_TO],
+            call.data[ATTR_POINTS],
+        )
+        until = call.data.get(ATTR_UNTIL) or dt_util.now().date()
+        try:
+            off = data.ledger.offer(
+                ulid_now(),
+                call.data[ATTR_KEY],
+                call.data[ATTR_CHORE],
+                sender,
+                receiver,
+                points,
+                until.isoformat(),
+                _now(),
+            )
+        except InsufficientPoints as err:
+            raise _insufficient(sender, err, points) from err
+        except OfferRefused as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key=err.reason
+            ) from err
+        _offers_changed(hass, data, {sender, receiver})
+        hass.bus.async_fire(EVENT_CHORE_OFFERED, _offer_event(off))
+        return {"offer_id": off.id, "available": data.ledger.available(sender)}
+
+    async def answer_offer(call: ServiceCall) -> ServiceResponse:
+        data = _loaded_entry(hass).runtime_data
+        _prune(hass, data)  # a round that is over can't be taken over any more
+        accept = call.data[ATTR_ACCEPT]
+        off = data.ledger.answer(call.data[ATTR_OFFER_ID], accept, _now())
+        if off is None:
+            return {"answered": False}
+        if accept and off.points:
+            label = f"🔁 {off.chore}".strip()
+            _changed(hass, data, off.sender, "transfer", -off.points, label)
+            _changed(hass, data, off.receiver, "transfer", off.points, label)
+        else:
+            _offers_changed(hass, data, {off.sender, off.receiver})
+        hass.bus.async_fire(EVENT_CHORE_ANSWERED, {**_offer_event(off), "accepted": accept})
+        return {"answered": True}
+
     for name, handler, schema in (
         (SERVICE_AWARD, award, AWARD_SCHEMA),
         (SERVICE_REVOKE, revoke, REVOKE_SCHEMA),
@@ -325,6 +422,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         (SERVICE_REQUEST_REWARD, request_reward, REWARD_SCHEMA),
         (SERVICE_APPROVE, approve, DECIDE_SCHEMA),
         (SERVICE_DENY, deny, DECIDE_SCHEMA),
+        (SERVICE_OFFER_CHORE, offer_chore, OFFER_SCHEMA),
+        (SERVICE_ANSWER_OFFER, answer_offer, ANSWER_SCHEMA),
     ):
         hass.services.async_register(
             DOMAIN, name, handler, schema=schema, supports_response=SupportsResponse.OPTIONAL
@@ -344,6 +443,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: FamilyTasksConfigEntry) 
                 await _decide(hass, entry, action.removeprefix(prefix), yes)
 
     entry.async_on_unload(hass.bus.async_listen(EVENT_NOTIFICATION_ACTION, _on_action))
+
+    @callback
+    def _new_day(_now: Any) -> None:
+        _prune(hass, entry.runtime_data)
+
+    # Offers end with their round: drop them just after midnight (and now).
+    _prune(hass, entry.runtime_data)
+    entry.async_on_unload(async_track_time_change(hass, _new_day, hour=0, minute=0, second=1))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

@@ -10,14 +10,27 @@ so several devices reporting the same checked-off task book it only once.
 A reward request reserves its points until a parent approves (it becomes a
 redemption) or denies it (the points are free again). Reserved points can't be
 requested or redeemed a second time.
+
+A chore can be handed to someone else for one round, maybe for points: the
+offer reserves them until the other person takes the chore (the points move
+over as a transfer) or turns it down. A transfer changes what someone can
+spend, not what they earned: it is no work done. Offers end with their round.
 """
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Literal
 
-Kind = Literal["award", "redeem", "adjust"]
+Kind = Literal["award", "redeem", "adjust", "transfer"]
+
+
+class OfferRefused(Exception):
+    """An offer that can't be made; `reason` names the translated message."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
 
 
 class InsufficientPoints(Exception):
@@ -36,7 +49,7 @@ class Booking:
 
     kind: Kind
     person: str
-    points: int  # always as booked: award/adjust add it, redeem subtracts it
+    points: int  # as booked: award/adjust/transfer add it (signed), redeem subtracts it
     label: str
     at: str  # ISO timestamp
     key: str | None = None  # awards only
@@ -54,15 +67,31 @@ class Request:
 
 
 @dataclass(frozen=True)
+class Offer:
+    """A chore handed to someone else for one round, maybe for points."""
+
+    id: str
+    key: str  # the chore in this round, as the card books it
+    chore: str
+    sender: str
+    receiver: str
+    points: int
+    until: str  # last day it matters (YYYY-MM-DD): the end of the round
+    at: str
+    accepted: bool = False
+
+
+@dataclass(frozen=True)
 class Totals:
-    """What a person has: earned (awards + adjustments), redeemed and the rest."""
+    """What a person has: earned (awards + adjustments), redeemed, transfers and the rest."""
 
     earned: int
     redeemed: int
+    transferred: int = 0  # points handed over for chores: received minus paid
 
     @property
     def balance(self) -> int:
-        return self.earned - self.redeemed
+        return self.earned - self.redeemed + self.transferred
 
 
 @dataclass
@@ -71,6 +100,7 @@ class Ledger:
 
     bookings: list[Booking] = field(default_factory=list)
     requests: list[Request] = field(default_factory=list)
+    offers: list[Offer] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> Ledger:
@@ -79,12 +109,14 @@ class Ledger:
         return cls(
             [Booking(**b) for b in data.get("bookings", [])],
             [Request(**r) for r in data.get("requests", [])],
+            [Offer(**o) for o in data.get("offers", [])],
         )
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "bookings": [asdict(b) for b in self.bookings],
             "requests": [asdict(r) for r in self.requests],
+            "offers": [asdict(o) for o in self.offers],
         }
 
     def _award_index(self, key: str) -> int | None:
@@ -148,11 +180,73 @@ class Ledger:
         return [r for r in self.requests if r.person == person]
 
     def reserved(self, person: str) -> int:
-        return sum(r.points for r in self.pending(person))
+        """Points held back for open reward requests and open chore offers."""
+        offered = sum(o.points for o in self.offers if o.sender == person and not o.accepted)
+        return sum(r.points for r in self.pending(person)) + offered
 
     def available(self, person: str) -> int:
-        """What can still be spent: balance minus points reserved by requests."""
+        """What can still be spent: balance minus reserved points."""
         return self.totals(person).balance - self.reserved(person)
+
+    def offer(
+        self,
+        offer_id: str,
+        key: str,
+        chore: str,
+        sender: str,
+        receiver: str,
+        points: int,
+        until: str,
+        at: str,
+    ) -> Offer:
+        """Hand a chore of this round to someone else; its points wait for the answer.
+
+        A new offer for the same chore replaces an open one. A chore already
+        taken over this round can't be offered again.
+        """
+        if points < 0:
+            raise ValueError("offer points must not be negative")
+        if sender == receiver:
+            raise OfferRefused("offer_self")
+        if any(o.key == key and o.accepted for o in self.offers):
+            raise OfferRefused("offer_taken")
+        self.offers = [o for o in self.offers if not (o.key == key and not o.accepted)]
+        available = self.available(sender)
+        if points > available:
+            raise InsufficientPoints(sender, available, points)
+        off = Offer(offer_id, key, chore, sender, receiver, points, until, at)
+        self.offers.append(off)
+        return off
+
+    def answer(self, offer_id: str, accept: bool, at: str) -> Offer | None:
+        """Take the chore over (its points move across) or turn it down / withdraw it.
+
+        None when the offer is gone or already taken.
+        """
+        for i, o in enumerate(self.offers):
+            if o.id != offer_id or o.accepted:
+                continue
+            if not accept:
+                return self.offers.pop(i)
+            taken = replace(o, accepted=True)
+            self.offers[i] = taken
+            if o.points:
+                label = f"🔁 {o.chore}".strip()
+                self.bookings.append(Booking("transfer", o.sender, -o.points, label, at))
+                self.bookings.append(Booking("transfer", o.receiver, o.points, label, at))
+            return taken
+        return None
+
+    def offers_of(self, person: str) -> list[Offer]:
+        """Offers this person made or got, oldest first."""
+        return [o for o in self.offers if person in (o.sender, o.receiver)]
+
+    def prune(self, today: str) -> list[Offer]:
+        """Forget offers whose round is over (open ones free their points). Returns them."""
+        gone = [o for o in self.offers if o.until < today]
+        if gone:
+            self.offers = [o for o in self.offers if o.until >= today]
+        return gone
 
     def adjust(self, person: str, points: int, label: str, at: str) -> None:
         """Bonus (positive) or deduction (negative) by a parent."""
@@ -161,9 +255,11 @@ class Ledger:
         self.bookings.append(Booking("adjust", person, points, label, at))
 
     def totals(self, person: str) -> Totals:
-        earned = sum(b.points for b in self.bookings if b.person == person and b.kind != "redeem")
-        redeemed = sum(b.points for b in self.bookings if b.person == person and b.kind == "redeem")
-        return Totals(earned, redeemed)
+        mine = [b for b in self.bookings if b.person == person]
+        earned = sum(b.points for b in mine if b.kind in ("award", "adjust"))
+        redeemed = sum(b.points for b in mine if b.kind == "redeem")
+        transferred = sum(b.points for b in mine if b.kind == "transfer")
+        return Totals(earned, redeemed, transferred)
 
     def last(self, person: str) -> Booking | None:
         for b in reversed(self.bookings):
@@ -178,4 +274,7 @@ class Ledger:
             seen.setdefault(b.person, None)
         for r in self.requests:
             seen.setdefault(r.person, None)
+        for o in self.offers:
+            seen.setdefault(o.sender, None)
+            seen.setdefault(o.receiver, None)
         return list(seen)

@@ -63,3 +63,13 @@ def test_several_tasks_on_one_day_are_one_streak_day():
 def test_a_streak_across_the_month_end():
     rows = [award(date(2026, 9, 30)), award(date(2026, 10, 1)), award(date(2026, 10, 2))]
     assert person_stats(rows, "Lina", date(2026, 10, 2)).streak == 3
+
+
+def test_points_handed_over_for_a_chore_are_no_work():
+    rows = [
+        award(TODAY, 5),
+        (TODAY, Booking("transfer", "Lina", 10, "🔁 Bins", "x")),
+        (TODAY, Booking("transfer", "Lina", -4, "🔁 Dishes", "x")),
+    ]
+    st = person_stats(rows, "Lina", TODAY)
+    assert (st.week_points, st.month_points, st.week_tasks) == (5, 5, 1)
