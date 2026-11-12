@@ -20,6 +20,12 @@
     },
     "insufficient_points": {
       "message": "{person} hat {balance} Punkte, die Belohnung kostet {points}."
+    },
+    "offer_self": {
+      "message": "Ein Ämtli kann nicht an dieselbe Person gehen."
+    },
+    "offer_taken": {
+      "message": "Dieses Ämtli wurde in dieser Runde schon übernommen."
     }
   },
   "services": {
@@ -126,6 +132,50 @@
         "request_id": {
           "name": "Anfrage-ID",
           "description": "ID der Anfrage."
+        }
+      }
+    },
+    "offer_chore": {
+      "name": "Ämtli anbieten",
+      "description": "Gibt ein Ämtli dieser Runde an jemand anderen ab, auf Wunsch gegen Punkte. Die Punkte sind reserviert, bis die andere Person antwortet; das Angebot endet mit der Runde.",
+      "fields": {
+        "key": {
+          "name": "Schlüssel",
+          "description": "Das Ämtli in dieser Runde, so wie die Karte es bucht."
+        },
+        "person": {
+          "name": "Von",
+          "description": "Wer das Ämtli abgibt."
+        },
+        "to": {
+          "name": "An",
+          "description": "Wer es übernehmen soll."
+        },
+        "points": {
+          "name": "Punkte",
+          "description": "Was die abgebende Person dafür zahlt; 0 ist ein Gefallen."
+        },
+        "chore": {
+          "name": "Ämtli",
+          "description": "Name des Ämtlis, für den Verlauf."
+        },
+        "until": {
+          "name": "Bis",
+          "description": "Letzter Tag der Runde; danach endet das Angebot. Standard: heute."
+        }
+      }
+    },
+    "answer_offer": {
+      "name": "Ämtli-Angebot beantworten",
+      "description": "Übernimmt das Ämtli (die Punkte wandern mit) oder lehnt ab. Die abgebende Person kann ein offenes Angebot genauso zurückziehen.",
+      "fields": {
+        "offer_id": {
+          "name": "Angebots-ID",
+          "description": "ID des Angebots."
+        },
+        "accept": {
+          "name": "Annehmen",
+          "description": "Ja übernimmt das Ämtli; Nein lehnt ab oder zieht zurück."
         }
       }
     }

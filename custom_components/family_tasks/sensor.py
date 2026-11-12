@@ -74,7 +74,7 @@ class PointsSensor(SensorEntity):
 
     @property
     def native_value(self) -> int:
-        """Spendable now: balance minus points reserved by open reward requests."""
+        """Spendable now: balance minus points reserved by open requests and offers."""
         return self._entry.runtime_data.ledger.available(self._person)
 
     @property
@@ -87,10 +87,25 @@ class PointsSensor(SensorEntity):
             "person": self._person,
             "earned": totals.earned,
             "redeemed": totals.redeemed,
+            "transferred": totals.transferred,
             "reserved": ledger.reserved(self._person),
             "pending": [
                 {"id": r.id, "reward": r.label, "points": r.points, "at": r.at}
                 for r in ledger.pending(self._person)
+            ],
+            # chores of this round handed over or offered, either way
+            "offers": [
+                {
+                    "id": o.id,
+                    "key": o.key,
+                    "chore": o.chore,
+                    "from": o.sender,
+                    "to": o.receiver,
+                    "points": o.points,
+                    "until": o.until,
+                    "accepted": o.accepted,
+                }
+                for o in ledger.offers_of(self._person)
             ],
             "last_booking": last.label if last else None,
             "last_booking_at": last.at if last else None,

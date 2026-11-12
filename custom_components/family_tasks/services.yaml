@@ -100,3 +100,48 @@ deny:
       example: "01J9Z6Q0Q8M2V3W4X5Y6Z7A8B9"
       selector:
         text:
+offer_chore:
+  fields:
+    key:
+      required: true
+      example: "todo.chores|a1b2c3|2026-10-11"
+      selector:
+        text:
+    person:
+      required: true
+      example: "person.lina"
+      selector:
+        text:
+    to:
+      required: true
+      example: "person.ben"
+      selector:
+        text:
+    points:
+      example: 10
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100000
+          mode: box
+    chore:
+      example: "Take out the bins"
+      selector:
+        text:
+    until:
+      example: "2026-10-11"
+      selector:
+        date:
+answer_offer:
+  fields:
+    offer_id:
+      required: true
+      example: "01JABCDEF0123456789"
+      selector:
+        text:
+    accept:
+      required: true
+      example: true
+      selector:
+        boolean:

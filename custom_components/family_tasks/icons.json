@@ -27,6 +27,12 @@
     },
     "deny": {
       "service": "mdi:close-octagon"
+    },
+    "offer_chore": {
+      "service": "mdi:swap-horizontal"
+    },
+    "answer_offer": {
+      "service": "mdi:handshake"
     }
   }
 }

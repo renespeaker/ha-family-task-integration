@@ -35,8 +35,8 @@ def person_stats(bookings: list[tuple[date, Booking]], person: str, today: date)
     week_points = month_points = week_tasks = month_tasks = 0
     task_days: set[date] = set()
     for day, b in bookings:
-        if b.person != person or b.kind == "redeem":
-            continue
+        if b.person != person or b.kind not in ("award", "adjust"):
+            continue  # spending and points handed over for a chore are no work done
         # award and adjust count as points earned; only awards are tasks
         if day >= week_start:
             week_points += b.points

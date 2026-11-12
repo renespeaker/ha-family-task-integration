@@ -20,6 +20,12 @@
     },
     "insufficient_points": {
       "message": "{person} has {balance} points, the reward costs {points}."
+    },
+    "offer_self": {
+      "message": "A chore can't be handed to the same person."
+    },
+    "offer_taken": {
+      "message": "This chore was already taken over this round."
     }
   },
   "services": {
@@ -126,6 +132,50 @@
         "request_id": {
           "name": "Request ID",
           "description": "ID of the request."
+        }
+      }
+    },
+    "offer_chore": {
+      "name": "Offer a chore",
+      "description": "Hands a chore of this round to someone else, maybe for points. The points are reserved until the other person answers; the offer ends with the round.",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "The chore in this round, as the card books it."
+        },
+        "person": {
+          "name": "From",
+          "description": "Who hands the chore over."
+        },
+        "to": {
+          "name": "To",
+          "description": "Who should take it over."
+        },
+        "points": {
+          "name": "Points",
+          "description": "What the sender pays for it; 0 is a favour."
+        },
+        "chore": {
+          "name": "Chore",
+          "description": "Name of the chore, for the history."
+        },
+        "until": {
+          "name": "Until",
+          "description": "Last day of the round; the offer ends after it. Default: today."
+        }
+      }
+    },
+    "answer_offer": {
+      "name": "Answer a chore offer",
+      "description": "Takes the chore over (the points move across) or turns it down. The sender can withdraw an open offer the same way.",
+      "fields": {
+        "offer_id": {
+          "name": "Offer ID",
+          "description": "ID of the offer."
+        },
+        "accept": {
+          "name": "Accept",
+          "description": "Yes takes the chore over; no turns it down or withdraws it."
         }
       }
     }
